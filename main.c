@@ -1,16 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <dirent.h>
 #include <time.h>
 #include <unistd.h>
 
+void list_trash(void);
 void send_to_trash(char *);
 void create_info(char *);
 
 int main(int argc, char **argv)
 {
 	if (argc <= 1) {
-		// see trashed files
-		printf("no arguments\n");
+		list_trash();
 
 		return 0;
 	}
@@ -18,6 +19,27 @@ int main(int argc, char **argv)
 	for (int i = 1; i < argc; i++) {
 		send_to_trash(argv[i]);
 		create_info(argv[i]);
+	}
+}
+
+void list_trash(void)
+{
+	DIR *d;
+	struct dirent *dir;
+
+	char trash_path[64];
+	snprintf(trash_path, sizeof(trash_path),
+		 "/home/%s/.local/share/Trash/files/", getlogin());
+
+	d = opendir(trash_path);
+
+	if (d) {
+		while ((dir = readdir(d)) != NULL) {
+			if (dir->d_type == DT_REG) {
+				printf("%s\n", dir->d_name);
+			}
+		}
+		closedir(d);
 	}
 }
 
